@@ -1,0 +1,280 @@
+
+
+
+
+AVTCORE Working Group                                          S. Majali
+Internet-Draft                                                    Nvidia
+Intended status: Informational                                2 May 2024
+Expires: 3 November 2024
+
+
+              RTCP feedback Message for Loss Notification
+             draft-majali-avtcore-lntf-feedback-message-00
+
+Abstract
+
+   Real-time media streams that use RTP, use multiple mechanisms to
+   recover from packet and frame loss.  Sender to recover frame loss
+   effectively, it can use information on the last frame receiver
+   successfully decoded and latest packet it received on network.  This
+   document describes an RTP Control Protocol (RTCP) feedback message
+   intended to notify the sender with loss details.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 3 November 2024.
+
+Copyright Notice
+
+   Copyright (c) 2024 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
+
+
+
+Majali                   Expires 3 November 2024                [Page 1]
+
+Internet-Draft                  RTCP LNTF                       May 2024
+
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
+     1.1.  Requirements Language . . . . . . . . . . . . . . . . . .   2
+   2.  LNTF Message  . . . . . . . . . . . . . . . . . . . . . . . .   2
+   3.  SDP Definitions . . . . . . . . . . . . . . . . . . . . . . .   4
+   4.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   4
+   5.  Security Considerations . . . . . . . . . . . . . . . . . . .   4
+   6.  References  . . . . . . . . . . . . . . . . . . . . . . . . .   4
+     6.1.  Normative References  . . . . . . . . . . . . . . . . . .   4
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .   5
+
+1.  Introduction
+
+   This document proposes RTCP feedback message Loss Notification (LNTF)
+   during packet loss, containing information about the latest frame
+   decoded and latest packet received by the receiver.  This feedback is
+   beneficial in video streaming; video encoder can use this information
+   to encode future frames by referencing successfully decoded frames.
+
+1.1.  Requirements Language
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in BCP
+   14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+2.  LNTF Message
+
+   LNTF message is identified by payload type defined as Payload-
+   Specific Feedback message (PSFB).
+
+      0                   1                   2                   3
+      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |V=2|P| FMT=15  |   PT=206      |             length            |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |                   SSRC of packet sender                       |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |                   SSRC of media source                        |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |              Unique identifier 'L' 'N' 'T' 'F'                |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     | Last Decoded Sequence Number  | Last Received SeqNum Delta  |D|
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+                                  Figure 1
+
+
+
+Majali                   Expires 3 November 2024                [Page 2]
+
+Internet-Draft                  RTCP LNTF                       May 2024
+
+
+   The fields V, P, FMT, PT, length and SSRC are defined in the RTP
+   specification Section 6.1 of [RFC4585], the respective meaning being
+   summarized below:
+
+   version (V): 2 bits
+      This field identifies the RTP version.  The current version is 2
+
+   padding (P): 1 bit
+      If set, the padding bit indicates that the packet contains
+      additional padding octets at the end that are not part of the
+      control information but are included in the length field.
+
+   feedback message type (FMT): 5 bits
+      This field identifies the type of the FB message.  It must have
+      the value 15, Application layer FB message
+
+   payload type (PT): 8 bits
+      This is the RTCP packet type that identifies the packet as being
+      an RTCP FB message.  The value must be PT=206, Payload-specific
+      message (PSFB)
+
+   length: 16 bits
+      The length of this packet in 32-bit words minus one, including the
+      header and any padding.  This is in line with the definition of
+      the length field used in RTCP sender and receiver reports
+      Section 6.4.1 of [RFC3550]
+
+   SSRC of packet sender: 32 bits
+      The synchronization source identifier for the originator of this
+      packet
+
+   SSRC of media source: 32 bits
+      The synchronization source identifier of the media source that
+      this piece of feedback information is related to.
+
+   Unique identifier: 32 bits
+      LNTF message is identified by ASCII characters ‘L’, ‘N’, ‘T’, ‘F’
+      (0x4C4E5446).
+
+   Last Decoded Sequence Number: 16 bits
+      RTP sequence number of last frame decoded, first packet sequence
+      number of the frame is chosen.
+
+   Last Decoded Sequence Number: 16 bits
+      RTP sequence number of last frame decoded, first packet sequence
+      number of the frame is chosen.
+
+
+
+
+
+Majali                   Expires 3 November 2024                [Page 3]
+
+Internet-Draft                  RTCP LNTF                       May 2024
+
+
+   Last Received Sequence Number Delta: 15 bits
+      Delta between last received sequence number and last decoded
+      sequence number.
+
+   Decodability flag (D): 1 bit
+      Decodability flag indicates if last packet received is part of the
+      frame which potentially can be decoded.  D=true for key frame
+      without RTP sequence gaps in that keyframe or frame with all
+      dependencies decodable.  Frame with sequence number gap has
+      D=false.
+
+3.  SDP Definitions
+
+   This section defines Session Description Protocol (SDP) signaling for
+   LNTF feedback that can be employed by applications.
+
+   rtcp-fb-syntax = "a=rtcp-fb:" rtcp-fb-pt SP rtcp-fb-val CRLF
+
+   rtcp-fb-pt              = "*" ; wildcard: applies to all formats
+
+                           = /fmt ; as defined in SDP
+
+   rtcp-fb-val             = "lntf"
+
+   The literals of the above grammar have the following semantics:
+   Feedback type "lntf": This feedback type indicates loss notification.
+
+4.  IANA Considerations
+
+   Upon publication of this document as an RFC (if it is decided to
+   publish it), IANA is requested to register the string "lntf" in its
+   registry of "rtcp-fb" values in the SDP attribute registry group.
+
+5.  Security Considerations
+
+   This is not different from security considerations for any other RTCP
+   message.
+
+6.  References
+
+6.1.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/info/rfc2119>.
+
+
+
+
+
+Majali                   Expires 3 November 2024                [Page 4]
+
+Internet-Draft                  RTCP LNTF                       May 2024
+
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/info/rfc8174>.
+
+   [RFC4585]  Ott, J., Wenger, S., Sato, N., Burmeister, C., and J. Rey,
+              "Extended RTP Profile for Real-time Transport Control
+              Protocol (RTCP)-Based Feedback (RTP/AVPF)", RFC 4585,
+              DOI 10.17487/RFC4585, July 2006,
+              <https://www.rfc-editor.org/info/rfc4585>.
+
+   [RFC3550]  Schulzrinne, H., Casner, S., Frederick, R., and V.
+              Jacobson, "RTP: A Transport Protocol for Real-Time
+              Applications", STD 64, RFC 3550, DOI 10.17487/RFC3550,
+              July 2003, <https://www.rfc-editor.org/info/rfc3550>.
+
+Author's Address
+
+   Shridhar Majali
+   Nvidia
+   2788 San Tomas Expressway
+   Santa Clara, CA 95051
+   United States of America
+   Email: smajali@nvidia.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Majali                   Expires 3 November 2024                [Page 5]
