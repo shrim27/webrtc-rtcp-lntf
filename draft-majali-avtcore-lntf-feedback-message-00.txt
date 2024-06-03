@@ -4,8 +4,8 @@
 
 AVTCORE Working Group                                          S. Majali
 Internet-Draft                                                    Nvidia
-Intended status: Informational                                2 May 2024
-Expires: 3 November 2024
+Intended status: Experimental                                3 June 2024
+Expires: 5 December 2024
 
 
               RTCP feedback Message for Loss Notification
@@ -35,7 +35,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 3 November 2024.
+   This Internet-Draft will expire on 5 December 2024.
 
 Copyright Notice
 
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Majali                   Expires 3 November 2024                [Page 1]
+Majali                   Expires 5 December 2024                [Page 1]
 
-Internet-Draft                  RTCP LNTF                       May 2024
+Internet-Draft                  RTCP LNTF                      June 2024
 
 
 Table of Contents
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Majali                   Expires 3 November 2024                [Page 2]
+Majali                   Expires 5 December 2024                [Page 2]
 
-Internet-Draft                  RTCP LNTF                       May 2024
+Internet-Draft                  RTCP LNTF                      June 2024
 
 
    The fields V, P, FMT, PT, length and SSRC are defined in the RTP
@@ -157,22 +157,18 @@ Internet-Draft                  RTCP LNTF                       May 2024
       RTP sequence number of last frame decoded, first packet sequence
       number of the frame is chosen.
 
-   Last Decoded Sequence Number: 16 bits
-      RTP sequence number of last frame decoded, first packet sequence
-      number of the frame is chosen.
-
-
-
-
-
-Majali                   Expires 3 November 2024                [Page 3]
-
-Internet-Draft                  RTCP LNTF                       May 2024
-
-
    Last Received Sequence Number Delta: 15 bits
       Delta between last received sequence number and last decoded
       sequence number.
+
+
+
+
+
+Majali                   Expires 5 December 2024                [Page 3]
+
+Internet-Draft                  RTCP LNTF                      June 2024
+
 
    Decodability flag (D): 1 bit
       Decodability flag indicates if last packet received is part of the
@@ -192,7 +188,7 @@ Internet-Draft                  RTCP LNTF                       May 2024
 
                            = /fmt ; as defined in SDP
 
-   rtcp-fb-val             = "lntf"
+   rtcp-fb-val             =/ "lntf"
 
    The literals of the above grammar have the following semantics:
    Feedback type "lntf": This feedback type indicates loss notification.
@@ -217,18 +213,18 @@ Internet-Draft                  RTCP LNTF                       May 2024
               DOI 10.17487/RFC2119, March 1997,
               <https://www.rfc-editor.org/info/rfc2119>.
 
-
-
-
-
-Majali                   Expires 3 November 2024                [Page 4]
-
-Internet-Draft                  RTCP LNTF                       May 2024
-
-
    [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/info/rfc8174>.
+
+
+
+
+
+Majali                   Expires 5 December 2024                [Page 4]
+
+Internet-Draft                  RTCP LNTF                      June 2024
+
 
    [RFC4585]  Ott, J., Wenger, S., Sato, N., Burmeister, C., and J. Rey,
               "Extended RTP Profile for Real-time Transport Control
@@ -277,4 +273,8 @@ Author's Address
 
 
 
-Majali                   Expires 3 November 2024                [Page 5]
+
+
+
+
+Majali                   Expires 5 December 2024                [Page 5]
