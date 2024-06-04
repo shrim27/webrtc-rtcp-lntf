@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<?xml-model href="rfc7991bis.rnc"?>
+
+<!DOCTYPE rfc [
+  <!ENTITY nbsp    "&#160;">
+  <!ENTITY zwsp   "&#8203;">
+  <!ENTITY nbhy   "&#8209;">
+  <!ENTITY wj     "&#8288;">
+]>
+
+<rfc
+  xmlns:xi="http://www.w3.org/2001/XInclude"
+  category="exp"
+  docName="draft-majali-avtcore-lntf-feedback-message-00"
+  ipr="trust200902"
+  obsoletes=""
+  updates=""
+  submissionType="IETF"
+  xml:lang="en"
+  version="3">
+
+  <front>
+    <title abbrev="RTCP LNTF">RTCP feedback Message for Loss Notification</title>
+
+    <seriesInfo name="INTERNET-DRAFT" value="draft-majali-avtcore-lntf-feedback-message-00"/>
+   
+    <author fullname="Shridhar Majali" initials="S" surname="Majali">
+      <organization>Nvidia</organization>
+      <address>
+        <postal>
+          <street>2788 San Tomas Expressway</street>
+          <city>Santa Clara</city>
+          <region>CA</region>
+          <code>95051</code>
+          <country>United States of America</country>
+        </postal>        
+        <phone></phone>
+        <email>smajali@nvidia.com</email>  
+      </address>
+    </author>
+   
+    <date year="2024"/>
+
+    <area>General</area>
+    <workgroup>AVTCORE Working Group</workgroup>
+
+    <keyword>RTCP</keyword>
+
+    <abstract>
+      <t>Real-time media streams that use RTP, use multiple mechanisms to recover from packet and frame loss. Sender to recover frame loss effectively, it can use information on the last frame receiver successfully decoded and latest packet it received on network. This document describes an RTP Control Protocol (RTCP) feedback message intended to notify the sender with loss details.</t>
+    </abstract>
+ 
+  </front>
+
+  <middle>
+    
+    <section>
+      <name>Introduction</name>
+      <t>This document proposes RTCP feedback message Loss Notification (LNTF) during packet loss,  containing information about the latest frame decoded and latest packet received by the receiver. This feedback is beneficial in video streaming; video encoder can use this information to encode future frames by referencing successfully decoded frames.</t>
+
+      <section>
+        <name>Requirements Language</name>
+        <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL",
+          "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT
+          RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be
+          interpreted as described in BCP 14 <xref target="RFC2119"/>
+          <xref target="RFC8174"/> when, and only when, they appear in
+          all capitals, as shown here.</t>
+      </section>
+
+    </section>
+    
+    <section>
+      <name>LNTF Message</name>
+      <t>LNTF message is identified by payload type defined as Payload-Specific Feedback message (PSFB).</t>
+      
+      <figure>
+        <artwork><![CDATA[
+   0                   1                   2                   3
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |V=2|P| FMT=15  |   PT=206      |             length            |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |                   SSRC of packet sender                       |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |                   SSRC of media source                        |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |              Unique identifier 'L' 'N' 'T' 'F'                |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  | Last Decoded Sequence Number  | Last Received SeqNum Delta  |D|
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+]]></artwork>
+      </figure>
+
+<t>The fields V, P, FMT, PT, length and SSRC are defined in the RTP specification <xref target="RFC4585" sectionFormat="of" section="6.1"/>, the respective meaning being summarized below:</t>
+<dl newline="true">
+  <dt>version (V): 2 bits</dt>
+  <dd>This field identifies the RTP version.  The current version is 2</dd>
+
+  <dt>padding (P): 1 bit</dt>
+  <dd>If set, the padding bit indicates that the packet contains additional padding octets at the end that are not part of the control information but are included in the length field.</dd>
+
+  <dt>feedback message type (FMT): 5 bits</dt>
+  <dd>This field identifies the type of the FB message. It must have the value 15, Application layer FB message</dd>
+
+  <dt>payload type (PT): 8 bits</dt>
+  <dd>This is the RTCP packet type that identifies the packet as being an RTCP FB message. The value must be PT=206, Payload-specific message (PSFB)</dd>
+
+  <dt>length: 16 bits</dt>
+  <dd>The length of this packet in 32-bit words minus one, including the header and any padding. This is in line with the definition of the length field used in RTCP sender and receiver reports <xref target="RFC3550" sectionFormat="of" section="6.4.1"/></dd>
+
+  <dt>SSRC of packet sender: 32 bits</dt>
+  <dd>The synchronization source identifier for the originator of this packet</dd>
+
+  <dt>SSRC of media source: 32 bits</dt>
+  <dd>The synchronization source identifier of the media source that this piece of feedback information is related to.</dd>
+
+  <dt>Unique identifier: 32 bits</dt>
+  <dd>LNTF message is identified by ASCII characters ‘L’, ‘N’, ‘T’, ‘F’ (0x4C4E5446).</dd>
+
+  <dt>Last Decoded Sequence Number: 16 bits</dt>
+  <dd>RTP sequence number of last frame decoded, first packet sequence number of the frame is chosen.</dd>
+
+  <dt>Last Received Sequence Number Delta: 15 bits</dt>
+  <dd>Delta between last received sequence number and last decoded sequence number.</dd>
+
+  <dt>Decodability flag (D): 1 bit</dt>
+  <dd>Decodability flag indicates if last packet received is part of the frame which potentially can be decoded. D=true for key frame without RTP sequence gaps in that keyframe or frame with all dependencies decodable. Frame with sequence number gap has D=false.</dd>
+</dl>
+    </section>
+
+    <section>
+      <name>SDP Definitions</name>
+      <t>This section defines Session Description Protocol (SDP) signaling for LNTF feedback that can be employed by applications.</t>
+      <t>rtcp-fb-syntax = "a=rtcp-fb:" rtcp-fb-pt SP rtcp-fb-val CRLF</t>
+      <dl newline="false" spacing="normal" indent="24">
+        <dt>rtcp-fb-pt</dt>
+        <dd>= "*"  ; wildcard: applies to all formats</dd>
+        <dt></dt>
+        <dd>= /fmt  ; as defined in SDP</dd>
+
+        <dt>rtcp-fb-val</dt>
+        <dd>=/  "lntf"</dd>
+      </dl>
+
+      <t>The literals of the above grammar have the following semantics: Feedback type "lntf": This feedback type indicates loss notification.</t>
+    </section>
+    
+    <section anchor="IANA">
+      <name>IANA Considerations</name>
+      <t>Upon publication of this document as an RFC (if it is decided to publish it), IANA is requested to register the string "lntf" in its registry of "rtcp-fb" values in the SDP attribute registry group.</t>
+    </section>
+    
+    <section anchor="Security">
+      <name>Security Considerations</name>
+      <t>This is not different from security considerations for any other RTCP message.</t>
+    </section>
+    <section anchor="Acknowledgements">
+      <name>Acknowledgements</name>
+      <t>The authors would like to thank Alfred Heggestad and Harald Alvestrand for their reviews and valuable comments.</t>
+    </section>
+  </middle>
+    
+  <back>
+    <references>
+      <name>References</name>
+      <references>
+        <name>Normative References</name>
+        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml"/>
+        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8174.xml"/>
+        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.4585.xml"/>
+        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.3550.xml"/>
+      </references>
+    </references>
+ </back>
+</rfc>
